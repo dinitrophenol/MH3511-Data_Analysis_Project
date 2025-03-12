@@ -26,7 +26,12 @@ data = data[!(rowSums(is.na(data) | data == "") > 0), ]
 ```{r}
 # Check that rows with empty values are removed
 colSums(is.na(data) | data == "")
+```
 
+```{r}
+# index column is dropped
+data = data[,2:11]
+head(data)
 ```
 
 ```{r}
@@ -36,11 +41,41 @@ dim(data)
 ## Description and Cleaning of Dataset
 
 ```{r}
-par(mfrow=c(1,3))
 # summary statistics for the main variable of interest, claim
-boxplot(data$claim)
-hist(data$claim)
-hist(log(data$claim)) # log-transformation
+x1 = seq(0, max(data$claim), 0.1)
+y1 = dnorm(x1, mean=mean(data$claim), sd=sd(data$claim))*5000*length(data$claim)
+boxplot((data$claim))
+hist(data$claim, main = "Histogram of claim", xlab = "claim")
+lines(x1,y1, col='red')
+
+```
+
+```{r}
+boxplot(log(data$claim), main = "Boxplot of log(claim)")
+x2 = seq(min(log(data$claim)), max(log(data$claim))+0.5, 0.1)
+y2 = dnorm(x2, mean=mean(log(data$claim)), sd=sd(log(data$claim)))*0.5*length(log(data$claim))
+hist(log(data$claim), main = "Histogram of log(claim)", xlab = "claim") # log-transformation
+lines(x2, y2, col='blue')
+
+```
+
+```{r}
+par(mfrow=c(1,2))
+qqnorm(data$claim)
+qqline(data$claim, col='red')
+
+qqnorm(log(data$claim))
+qqline(log(data$claim), col='red')
+```
+
+```{r}
+library(moments)
+print(skewness(data$claim))
+print(skewness(log(data$claim)))
+```
+
+```{r}
+summary(log(data$claim))
 ```
 
 ```{r}
@@ -65,36 +100,40 @@ boxplot(data$bloodpressure)
 
 ```{r}
 library(gplots)
-mat = cor(data[,c(3, 5, 6, 11)])
+mat = cor(data[,c(2, 4, 5, 10)])
 heatmap.2(mat, cellnote=round(mat, 2), trace = "none", notecol="black")
+```
+
+```{r}
+pairs(data[,c(2, 4, 5, 10)])
 ```
 
 Relation between claims and gender
 
 ```{r}
-boxplot(data$claim~data$gender)
+boxplot(log(data$claim)~data$gender)
 ```
 
 Relation between claims and diabetic
 
 ```{r}
-boxplot(data$claim~data$diabetic)
+boxplot(log(data$claim)~data$diabetic)
 ```
 
 Relation between claim and children
 
 ```{r}
-boxplot(data$claim~data$children)
+boxplot(log(data$claim)~data$children)
 ```
 
 Relation between claim and smoker
 
 ```{r}
-boxplot(data$claim~data$smoker)
+boxplot(log(data$claim)~data$smoker)
 ```
 
 Relation between claim and region
 
 ```{r}
-boxplot(data$claim~data$region)
+boxplot(log(data$claim)~data$region)
 ```
