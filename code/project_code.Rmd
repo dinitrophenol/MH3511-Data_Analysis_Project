@@ -29,6 +29,10 @@ colSums(is.na(data) | data == "")
 
 ```
 
+```{r}
+dim(data)
+```
+
 ## Description and Cleaning of Dataset
 
 ```{r}
@@ -60,7 +64,9 @@ boxplot(data$bloodpressure)
 ## Statistical Analysis
 
 ```{r}
-cor(data[,c(3, 5, 6, 11)])
+library(gplots)
+mat = cor(data[,c(3, 5, 6, 11)])
+heatmap.2(mat, cellnote=round(mat, 2), trace = "none", notecol="black")
 ```
 
 Relation between claims and gender
