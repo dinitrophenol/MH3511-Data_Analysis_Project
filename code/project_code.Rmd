@@ -80,20 +80,67 @@ summary(log(data$claim))
 
 ```{r}
 par(mfrow = c(1,2))
-hist(data$age)
-boxplot(data$age)
+hist(data$age, main = "Age", xlab = "Age")
+boxplot(data$age, main = "Age")
+```
+```{r}
+barplot(table(data$age), main = "Number of insured patient by age")
+```
+```{r}
+qqnorm(sqrt(data$age))
+qqline(sqrt(data$age))
+```
+
+```{r fig4, out.height = 6}
+dev.new(width = 12, height = 6)
+x = seq(min(data$bmi), max(data$bmi), by = 0.1)
+y = dnorm(x, mean = mean(data$bmi), sd = sd(data$bmi)) * length(data$bmi) * 5
+hist(data$bmi, main = "BMI", xlab = 'BMI')
+lines(x,y, col = 'red')
+boxplot(data$bmi, main = "BMI")
+```
+
+```{r}
+
 ```
 
 ```{r}
 par(mfrow = c(1,2))
-hist(data$bmi)
-boxplot(data$bmi)
+qqnorm(sqrt(data$bmi))
+qqline(sqrt(data$bmi), col = 'red')
+
+qqnorm(log(data$bmi))
+qqline(log(data$bmi), col = 'red')
+
+shapiro.test((data$bmi))
+```
+```{r}
+par(mfrow = c(1,2))
+hist(sqrt(data$bmi), main = "sqrt(BMI)", xlab = "sqrt(BMI)")
+x = seq(min(sqrt(data$bmi)), max(sqrt(data$bmi)), by = 0.1)
+y = dnorm(x, mean = mean(sqrt(data$bmi)), sd = sd(sqrt(data$bmi))) * length(sqrt(data$bmi)) * 0.2
+lines(x,y, col = 'blue')
+boxplot(sqrt(data$bmi), main = "sqrt(BMI)")
 ```
 
 ```{r}
 par(mfrow = c(1,2))
-hist(data$bloodpressure)
-boxplot(data$bloodpressure)
+hist(data$bloodpressure, main = "bloodpressure", xlab = "bloodpressure")
+boxplot(data$bloodpressure, main = "bloodpressure")
+```
+```{r}
+hist(sqrt(data$bloodpressure))
+shapiro.test((data$bloodpressure))
+```
+
+```{r}
+qqnorm(sqrt(data$bloodpressure))
+qqline(sqrt(data$bloodpressure), col = "red")
+```
+
+```{r}
+model = lm(log(data$claim)~sqrt(data$bloodpressure))
+summary(model)
 ```
 
 ## Statistical Analysis
@@ -113,11 +160,17 @@ Relation between claims and gender
 ```{r}
 boxplot(log(data$claim)~data$gender)
 ```
+```{r}
+barplot(table(data$gender), main = "Number of insured patients by gender", le)
+```
 
 Relation between claims and diabetic
 
 ```{r}
 boxplot(log(data$claim)~data$diabetic)
+```
+```{r}
+barplot(table(data$diabetic), main="Number of insured patients by diabetic status")
 ```
 
 Relation between claim and children
@@ -125,11 +178,17 @@ Relation between claim and children
 ```{r}
 boxplot(log(data$claim)~data$children)
 ```
+```{r}
+barplot(table(data$children), main = "Number of insured patients by their number of children")
+```
 
 Relation between claim and smoker
 
 ```{r}
 boxplot(log(data$claim)~data$smoker)
+```
+```{r}
+barplot(table(data$smoker), main = "Number of insured patients by their smoking status")
 ```
 
 Relation between claim and region
@@ -137,3 +196,7 @@ Relation between claim and region
 ```{r}
 boxplot(log(data$claim)~data$region)
 ```
+```{r}
+barplot(table(data$region), main = "Number of insured patient in each region")
+```
+
