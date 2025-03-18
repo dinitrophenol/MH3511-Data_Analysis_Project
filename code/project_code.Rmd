@@ -142,6 +142,10 @@ qqline(sqrt(data$bloodpressure), col = "red")
 model = lm(log(data$claim)~sqrt(data$bloodpressure))
 summary(model)
 ```
+```{r}
+data["logclaim"] = log(data$claim)
+data["sqrtbmi"] = sqrt(data$bmi)
+```
 
 ## Statistical Analysis
 
