@@ -122,14 +122,25 @@ y = dnorm(x, mean = mean(sqrt(data$bmi)), sd = sd(sqrt(data$bmi))) * length(sqrt
 lines(x,y, col = 'blue')
 boxplot(sqrt(data$bmi), main = "sqrt(BMI)")
 ```
+```{r}
+model = lm(log(data$claim)~sqrt(data$sqrtbmi))
+resd = residuals(model)
+qqnorm(resd)
+qqline(resd, col="red")
+```
+
 
 ```{r}
 par(mfrow = c(1,2))
 hist(data$bloodpressure, main = "bloodpressure", xlab = "bloodpressure")
 boxplot(data$bloodpressure, main = "bloodpressure")
 ```
+
+
 ```{r}
-hist(sqrt(data$bloodpressure))
+par(mfrow=c(1,2))
+hist(log(data$bloodpressure))
+boxplot(log(data$bloodpressure))
 shapiro.test((data$bloodpressure))
 ```
 
@@ -137,10 +148,20 @@ shapiro.test((data$bloodpressure))
 qqnorm(sqrt(data$bloodpressure))
 qqline(sqrt(data$bloodpressure), col = "red")
 ```
+```{r}
+sum(data$bloodpressure > quantile(data$bloodpressure, 0.75) + 1.5*IQR(data$bloodpressure))
+
+sum(data$bloodpressure < quantile(data$bloodpressure, 0.25) - 1.5*IQR(data$bloodpressure))
+
+max(data$bloodpressure)
+```
+
 
 ```{r}
 model = lm(log(data$claim)~sqrt(data$bloodpressure))
-summary(model)
+resd = residuals(model)
+qqnorm(resd)
+qqline(resd, col="red")
 ```
 ```{r}
 data["logclaim"] = log(data$claim)
@@ -162,45 +183,95 @@ pairs(data[,c(2, 4, 5, 10)])
 Relation between claims and gender
 
 ```{r}
-boxplot(log(data$claim)~data$gender)
+boxplot(log(data$claim)~data$gender, ylab = "log(claim)", xlab = "gender")
 ```
 ```{r}
 barplot(table(data$gender), main = "Number of insured patients by gender", le)
+```
+```{r}
+var.test(data$logclaim ~ data$gender)
+```
+```{r}
+t.test(data$logclaim[data$gender == "male"], data$logclaim[data$gender =="female"], var.equal = FALSE)
 ```
 
 Relation between claims and diabetic
 
 ```{r}
-boxplot(log(data$claim)~data$diabetic)
+boxplot(log(data$claim)~data$diabetic, xlab = "diabetic", ylab = "log(claim)")
 ```
 ```{r}
 barplot(table(data$diabetic), main="Number of insured patients by diabetic status")
 ```
 
+```{r}
+var.test(data$logclaim ~ data$diabetic)
+```
+
+```{r}
+t.test(data$logclaim[data$diabetic == "No"], data$logclaim[data$diabetic == "Yes"], var.equal = TRUE)
+```
+
 Relation between claim and children
 
 ```{r}
-boxplot(log(data$claim)~data$children)
+boxplot(log(data$claim)~data$children, xlab = "children", ylab = "logclaim")
+abline(h = mean(data$logclaim), col = 'blue')
 ```
 ```{r}
 barplot(table(data$children), main = "Number of insured patients by their number of children")
 ```
 
+```{r}
+summary(aov(data$logclaim ~ factor(data$children)))
+```
+```{r}
+pairwise.t.test(data$logclaim, data$children, p.adjust.method = "none")
+```
+
+
 Relation between claim and smoker
 
 ```{r}
-boxplot(log(data$claim)~data$smoker)
+boxplot(log(data$claim)~data$smoker, xlab = "smoker", ylab = "log(claim)")
 ```
 ```{r}
 barplot(table(data$smoker), main = "Number of insured patients by their smoking status")
 ```
 
+```{r}
+var.test(data$logclaim ~ data$smoker)
+```
+
+```{r}
+t.test(data$logclaim[data$smoker == "No"], data$logclaim[data$smoker == "Yes"])
+```
+
 Relation between claim and region
 
 ```{r}
-boxplot(log(data$claim)~data$region)
+boxplot(log(data$claim)~data$region, xlab = "region", ylab = "log(claim)")
+abline(h=mean(data$logclaim), col='red')
 ```
 ```{r}
 barplot(table(data$region), main = "Number of insured patient in each region")
+```
+
+```{r}
+summary(aov(data$logclaim ~ factor(data$region)))
+```
+```{r}
+pairwise.t.test(data$logclaim, data$region, p.adjust.method="none")
+```
+
+
+```{r}
+continuous = data[,c(2, 5, 11, 12)]
+```
+
+```{r}
+library(PerformanceAnalytics)
+
+chart.Correlation(continuous, histogram = TRUE, method = "pearson")
 ```
 
