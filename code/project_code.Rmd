@@ -7,19 +7,34 @@ output:
     toc_depth: 3
     toc_float: yes
 ---
+  
+#necessary packages
 
 ```{r}
-data = read.csv("C:\\Users\\victo\\Downloads\\Insurance_data\\insurance_data.csv", header = T)
-head(data)
+install.packages("gplots")
+install.packages('GGally')
+install.packages("psych")
+library(GGally)
+library(gplots)  
+library(moments)
+library(psych)
 ```
 
 ```{r}
+## importing the dataset
+data = read.csv("C:\\Users\\thuva\\OneDrive\\Documents\\CODING\\R Codes\\MH3511\\MH3511-Data_Analysis_Project\\dataset\\insurance_data.csv", header = T)
+head(data)
+
+
+```{r}
+# Checking if there are any columns with missing values
 colSums(is.na(data) | data == "")
 ```
 
-From the above results, there is 5 missing values for age and 3 missing values for region and so we decide to remove the rows with missing values
+#From the above results, there is 5 missing values for age and 3 missing values for region and so we decide to remove the rows with missing values
 
 ```{r}
+# Removing the rows that have missing data in them
 data = data[!(rowSums(is.na(data) | data == "") > 0), ]
 ```
 
@@ -41,41 +56,45 @@ dim(data)
 ## Description and Cleaning of Dataset
 
 ```{r}
+#printing out plots on new tab
+dev.new(width = 12, height = 6)
+
 # summary statistics for the main variable of interest, claim
 x1 = seq(0, max(data$claim), 0.1)
 y1 = dnorm(x1, mean=mean(data$claim), sd=sd(data$claim))*5000*length(data$claim)
-boxplot((data$claim))
+boxplot((data$claim), main = "Boxplot of claim")
 hist(data$claim, main = "Histogram of claim", xlab = "claim")
 lines(x1,y1, col='red')
+print(skewness(data$claim))
 
 ```
 
 ```{r}
+#doing a log transformation for claim, and printing out the different plots
 boxplot(log(data$claim), main = "Boxplot of log(claim)")
 x2 = seq(min(log(data$claim)), max(log(data$claim))+0.5, 0.1)
 y2 = dnorm(x2, mean=mean(log(data$claim)), sd=sd(log(data$claim)))*0.5*length(log(data$claim))
 hist(log(data$claim), main = "Histogram of log(claim)", xlab = "claim") # log-transformation
 lines(x2, y2, col='blue')
-
-```
-
-```{r}
-par(mfrow=c(1,2))
-qqnorm(data$claim)
-qqline(data$claim, col='red')
-
-qqnorm(log(data$claim))
-qqline(log(data$claim), col='red')
-```
-
-```{r}
-library(moments)
-print(skewness(data$claim))
 print(skewness(log(data$claim)))
+
+#saving the log transformed claim into data
+data$claim <- log(data$claim)
+names(data)[names(data) == 'claim'] <- 'log(claim)'
+
 ```
 
 ```{r}
-summary(log(data$claim))
+par(mfrow=c(1,1))
+qqnorm(data$`log(claim)`)
+qqline(data$`log(claim)`, col='red')
+
+qqnorm(data$`log(claim)`)
+qqline(data$`log(claim)`, col='red')
+```
+
+```{r}
+summary(data$`log(claim)`)
 ```
 
 ```{r}
@@ -86,13 +105,9 @@ boxplot(data$age, main = "Age")
 ```{r}
 barplot(table(data$age), main = "Number of insured patient by age")
 ```
-```{r}
-qqnorm(sqrt(data$age))
-qqline(sqrt(data$age))
-```
 
-```{r fig4, out.height = 6}
-dev.new(width = 12, height = 6)
+```{r}
+#analysis of BMI
 x = seq(min(data$bmi), max(data$bmi), by = 0.1)
 y = dnorm(x, mean = mean(data$bmi), sd = sd(data$bmi)) * length(data$bmi) * 5
 hist(data$bmi, main = "BMI", xlab = 'BMI')
@@ -113,17 +128,24 @@ qqnorm(log(data$bmi))
 qqline(log(data$bmi), col = 'red')
 
 shapiro.test((data$bmi))
+print(skewness(data$bmi))
 ```
 ```{r}
+#square root transformation of BMI
 par(mfrow = c(1,2))
 hist(sqrt(data$bmi), main = "sqrt(BMI)", xlab = "sqrt(BMI)")
 x = seq(min(sqrt(data$bmi)), max(sqrt(data$bmi)), by = 0.1)
 y = dnorm(x, mean = mean(sqrt(data$bmi)), sd = sd(sqrt(data$bmi))) * length(sqrt(data$bmi)) * 0.2
 lines(x,y, col = 'blue')
 boxplot(sqrt(data$bmi), main = "sqrt(BMI)")
+print(skewness(sqrt(data$bmi)))
+
+##savinig the bmi into data
+data$bmi <- sqrt(data$bmi)
+names(data)[names(data) == 'bmi'] <- 'sqrt(bmi)'
 ```
 ```{r}
-model = lm(log(data$claim)~sqrt(data$sqrtbmi))
+model = lm(data$`log(claim)`~ data$`sqrt(bmi)`)
 resd = residuals(model)
 qqnorm(resd)
 qqline(resd, col="red")
@@ -131,123 +153,127 @@ qqline(resd, col="red")
 
 
 ```{r}
-par(mfrow = c(1,2))
+par(mfrow = c(1,1))
+x = seq(min(data$bloodpressure), max(data$bloodpressure), by = 0.1)
+y = dnorm(x, mean = mean(data$bloodpressure), sd = sd(data$bloodpressure)) * length(data$bloodpressure) * 5
 hist(data$bloodpressure, main = "bloodpressure", xlab = "bloodpressure")
+lines(x,y, col = 'red')
 boxplot(data$bloodpressure, main = "bloodpressure")
+outliers_before <- boxplot.stats(data$bloodpressure)$out
+length(outliers_before)  # Number of outliers before log transform
+print(skewness(data$bloodpressure))
+
 ```
 
 
 ```{r}
 par(mfrow=c(1,2))
-hist(log(data$bloodpressure))
+x2 <- seq(min(log(data$bloodpressure)), max(log(data$bloodpressure)), length = 100)
+y2 <- dnorm(x2, mean = mean(log(data$bloodpressure)), sd = sd(log(data$bloodpressure)))
+hist(log(data$bloodpressure), 
+     main = "Histogram of log(data$bloodpressure)", 
+     xlab = "log(data$bloodpressure)", 
+     col = "gray", 
+     freq = FALSE)
+lines(x2, y2, col = 'blue', lwd = 2)
 boxplot(log(data$bloodpressure))
-shapiro.test((data$bloodpressure))
+outliers_after <- boxplot.stats(log(data$bloodpressure))$out
+length(outliers_after)  # Number of outliers after log transform
+print(skewness(log(data$bloodpressure)))
+
+## saving transformed bp into data
+data$bloodpressure <- log(data$bloodpressure)
+names(data)[names(data) == 'bloodpressure'] <- 'log(bloodpressure)'
 ```
 
 ```{r}
-qqnorm(sqrt(data$bloodpressure))
-qqline(sqrt(data$bloodpressure), col = "red")
-```
-```{r}
-sum(data$bloodpressure > quantile(data$bloodpressure, 0.75) + 1.5*IQR(data$bloodpressure))
-
-sum(data$bloodpressure < quantile(data$bloodpressure, 0.25) - 1.5*IQR(data$bloodpressure))
-
-max(data$bloodpressure)
+qqnorm(data$`log(bloodpressure)`)
+qqline(data$`log(bloodpressure)`, col = "red")
 ```
 
-
 ```{r}
-model = lm(log(data$claim)~sqrt(data$bloodpressure))
+model = lm(data$`log(claim)`~data$`log(bloodpressure)`)
 resd = residuals(model)
 qqnorm(resd)
 qqline(resd, col="red")
-```
-```{r}
-data["logclaim"] = log(data$claim)
-data["sqrtbmi"] = sqrt(data$bmi)
 ```
 
 ## Statistical Analysis
 
 ```{r}
-library(gplots)
-mat = cor(data[,c(2, 4, 5, 10)])
+cont_data <- data[, c('log(claim)', 'age', 'sqrt(bmi)', 'log(bloodpressure)')]
+mat = cor(cont_data) 
 heatmap.2(mat, cellnote=round(mat, 2), trace = "none", notecol="black")
+
+
+pairs.panels(cont_data,
+             method = "pearson",       # Correlation method
+             hist.col = "gray",        # Histogram fill color
+             density = TRUE, col = 'red',           # Adds red density lines
+             ellipses = FALSE,         # Skip correlation ellipses
+             scale = FALSE,            # Keeps axis scales consistent
+             cex.cor = 1.2)            # Adjusts size of correlation text
+
 ```
+
 
 ```{r}
 pairs(data[,c(2, 4, 5, 10)])
 ```
 
-Relation between claims and gender
+#Relation between claims and gender
 
 ```{r}
-boxplot(log(data$claim)~data$gender, ylab = "log(claim)", xlab = "gender")
+boxplot(log(data$`log(claim)`)~data$gender, ylab = "log(claim)", xlab = "gender")
 ```
 ```{r}
 barplot(table(data$gender), main = "Number of insured patients by gender", le)
-```
-```{r}
-var.test(data$logclaim ~ data$gender)
-```
-```{r}
-t.test(data$logclaim[data$gender == "male"], data$logclaim[data$gender =="female"], var.equal = FALSE)
-```
 
-Relation between claims and diabetic
+```
+```{r}
+var.test(data$`log(claim)`~data$gender)
+`````````
+```{r}
+t.test(data$`log(claim)`[data$gender == "male"],data$`log(claim)`[data$gender == "female"], var.equal = FALSE)
 
-```{r}
-boxplot(log(data$claim)~data$diabetic, xlab = "diabetic", ylab = "log(claim)")
 ```
-```{r}
-barplot(table(data$diabetic), main="Number of insured patients by diabetic status")
-```
+#Relation between claim and smoker
 
 ```{r}
-var.test(data$logclaim ~ data$diabetic)
-```
-
-```{r}
-t.test(data$logclaim[data$diabetic == "No"], data$logclaim[data$diabetic == "Yes"], var.equal = TRUE)
-```
-
-Relation between claim and children
-
-```{r}
-boxplot(log(data$claim)~data$children, xlab = "children", ylab = "logclaim")
-abline(h = mean(data$logclaim), col = 'blue')
-```
-```{r}
-barplot(table(data$children), main = "Number of insured patients by their number of children")
-```
-
-```{r}
-summary(aov(data$logclaim ~ factor(data$children)))
-```
-```{r}
-pairwise.t.test(data$logclaim, data$children, p.adjust.method = "none")
-```
-
-
-Relation between claim and smoker
-
-```{r}
-boxplot(log(data$claim)~data$smoker, xlab = "smoker", ylab = "log(claim)")
+boxplot(data$`log(claim)`~data$smoker, xlab = "smoker", ylab = "log(claim)")
 ```
 ```{r}
 barplot(table(data$smoker), main = "Number of insured patients by their smoking status")
 ```
 
 ```{r}
-var.test(data$logclaim ~ data$smoker)
+var.test(data$`log(claim)` ~ data$smoker)
 ```
 
 ```{r}
-t.test(data$logclaim[data$smoker == "No"], data$logclaim[data$smoker == "Yes"])
+t.test(data$`log(claim)`[data$smoker == "No"], data$`log(claim)`[data$smoker == "Yes"])
 ```
 
-Relation between claim and region
+
+#Relation between claims and diabetic
+
+```{r}
+boxplot(log(data$`log(claim)`)~data$diabetic, xlab = "diabetic", ylab = "log(claim)")
+```
+```{r}
+barplot(table(data$diabetic), main="Number of insured patients by diabetic status")
+```
+
+```{r}
+var.test(data$`log(claim)` ~ data$diabetic)
+```
+
+```{r}
+t.test(data$`log(claim)`[data$diabetic == "No"], data$`log(claim)`[data$diabetic == "Yes"], var.equal = TRUE)
+```
+
+
+# Relation between claim and region
 
 ```{r}
 boxplot(log(data$claim)~data$region, xlab = "region", ylab = "log(claim)")
@@ -258,20 +284,87 @@ barplot(table(data$region), main = "Number of insured patient in each region")
 ```
 
 ```{r}
-summary(aov(data$logclaim ~ factor(data$region)))
+summary(aov(data$`log(claim)` ~ factor(data$region)))
+oneway.test(data$`log(claim)` ~ data$region, data = data, var.equal = FALSE)
 ```
 ```{r}
-pairwise.t.test(data$logclaim, data$region, p.adjust.method="none")
+pairwise.t.test(data$`log(claim)`, data$region, p.adjust.method="none")
+```
+
+
+# Relation between claim and children
+
+```{r}
+boxplot(data$`log(claim)`~data$children, xlab = "children", ylab = "log(claim)")
+abline(h = mean(data$`log(claim)`), col = 'blue')
+```
+```{r}
+barplot(table(data$children), main = "Number of insured patients by their number of children")
+oneway.test(data$`log(claim)` ~ data$children, data = data, var.equal = F)
+pairwise.t.test(data$`log(claim)`, data$children, p.adjust.method = 'none')
+sum(data$children == 5)
+```
+
+```{r}
+summary(aov(data$`log(claim)` ~ factor(data$children)))
+```
+```{r}
+pairwise.t.test(data$`log(claim)`, data$children, p.adjust.method = "none")
 ```
 
 
 ```{r}
-continuous = data[,c(2, 5, 11, 12)]
-```
+library(ggplot2)
 
-```{r}
-library(PerformanceAnalytics)
+# Plot for sqrt(bmi) to identify threshold
+ggplot(data, aes(x = `sqrt(bmi)`, y = `log(claim)`)) +
+  geom_point(alpha = 0.3) +
+  geom_vline(xintercept = 5.45, linetype = "dashed", color = "blue") +
+  geom_hline(yintercept = 10.4, linetype = "dashed", color = "red") +
+  annotate("text", x = 5.45, y = max(data$`log(claim)`), 
+           label = "Threshold = 5.45", hjust = -0.1, color = "blue") +
+  annotate("text", x = min(data$`sqrt(bmi)`) + 0.2, y = 10.4, 
+           label = "log(claim) = 10.4", vjust = -1, color = "red") +
+  labs(title = "log(claim) vs sqrt(bmi)", 
+       x = "sqrt(bmi)", 
+       y = "log(claim)") +
+  theme_minimal()
 
-chart.Correlation(continuous, histogram = TRUE, method = "pearson")
+
+
+# Create group based on threshold
+data$bmi_group <- ifelse(data$`sqrt(bmi)` > 5.45, "More than 5.45", "Lower than 5.45")
+sum(data$bmi_group == "Lower than 5.45")
+
+
+# Boxplot
+boxplot(`log(claim)` ~ bmi_group, data = data,
+        main = "log(claim) by sqrt(bmi) group",
+        ylab = "log(claim)", xlab = "sqrt(bmi) threshold group")
+
+# t-test to compare means
+t.test(`log(claim)` ~ bmi_group, data = data)
+
+# plot for log(bloodpressure) for threshold
+ggplot(data, aes(x = `log(bloodpressure)`, y = `log(claim)`)) +
+  geom_point(alpha = 0.3) +
+  geom_vline(xintercept = 4.61, linetype = "dashed", color = "blue") +
+  geom_hline(yintercept = 9.13, linetype = "dashed", color = "red") +
+  annotate("text", x = 4.61, y = max(data$`log(claim)`), 
+           label = "Threshold = 4.61", hjust = -0.1, color = "blue") +
+  annotate("text", x = min(data$`log(bloodpressure)`) + 0.1, y = 10.4, 
+           label = "log(claim) = 9.13", vjust = -1, color = "red") +
+  labs(title = "log(claim) vs log(bloodpressure)", 
+       x = "log(bloodpressure)", 
+       y = "log(claim)") +
+  theme_minimal()
+
+# Create a new variable based on the 4.61 threshold
+data$bp_group <- ifelse(data$`log(bloodpressure)` > 4.61, "More than 4.61", "Less than 4.61")
+
+boxplot(`log(claim)` ~ bp_group, data = data,
+        main = "log(claim) by log(bloodpressure) group",
+        ylab = "log(claim)", xlab = "log(bloodpressure) threshold group")
+
 ```
 
