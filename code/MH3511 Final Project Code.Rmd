@@ -1,0 +1,447 @@
+---
+title: "MH3511_Project"
+output: 
+  html_document:
+    fig_caption: yes
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+---
+```{r}
+
+```
+  
+#necessary packages
+
+```{r}
+install.packages("gplots")
+install.packages('GGally')
+install.packages("psych")
+library(GGally)
+library(gplots)  
+library(moments)
+library(psych)
+```
+
+```{r}
+## importing the dataset
+data = read.csv("C:/Users/firda/OneDrive - Nanyang Technological University/Firdaus Khan (NTU DSAI)/DSAI/Y2S2/MH3511/insurance_data.csv", header = T)
+head(data)
+```
+
+
+```{r}
+# Checking if there are any columns with missing values
+colSums(is.na(data) | data == "")
+```
+
+#From the above results, there is 5 missing values for age and 3 missing values for region and so we decide to remove the rows with missing values
+
+```{r}
+# Removing the rows that have missing data in them
+data = data[!(rowSums(is.na(data) | data == "") > 0), ]
+```
+
+```{r}
+# Check that rows with empty values are removed
+colSums(is.na(data) | data == "")
+```
+
+```{r}
+# index column is dropped
+data = data[,2:11]
+head(data)
+```
+
+```{r}
+dim(data)
+```
+
+## Description and Cleaning of Dataset
+
+```{r}
+#printing out plots on new tab
+dev.new(width = 12, height = 6)
+
+# summary statistics for the main variable of interest, claim
+x1 = seq(0, max(data$claim), 0.1)
+y1 = dnorm(x1, mean=mean(data$claim), sd=sd(data$claim))*5000*length(data$claim)
+boxplot((data$claim), main = "Boxplot of claim")
+hist(data$claim, main = "Histogram of claim", xlab = "claim")
+lines(x1,y1, col='red')
+print(skewness(data$claim))
+
+```
+
+```{r}
+#doing a log transformation for claim, and printing out the different plots
+boxplot(log(data$claim), main = "Boxplot of log(claim)")
+x2 = seq(min(log(data$claim)), max(log(data$claim))+0.5, 0.1)
+y2 = dnorm(x2, mean=mean(log(data$claim)), sd=sd(log(data$claim)))*0.5*length(log(data$claim))
+hist(log(data$claim), main = "Histogram of log(claim)", xlab = "claim") # log-transformation
+lines(x2, y2, col='blue')
+print(skewness(log(data$claim)))
+
+#saving the log transformed claim into data
+data$claim <- log(data$claim)
+names(data)[names(data) == 'claim'] <- 'log(claim)'
+
+```
+
+```{r}
+par(mfrow=c(1,1))
+qqnorm(data$`log(claim)`)
+qqline(data$`log(claim)`, col='red')
+
+qqnorm(data$`log(claim)`)
+qqline(data$`log(claim)`, col='red')
+```
+
+```{r}
+summary(data$`log(claim)`)
+```
+
+```{r}
+par(mfrow = c(1,2))
+hist(data$age, main = "Age", xlab = "Age")
+boxplot(data$age, main = "Age")
+```
+```{r}
+barplot(table(data$age), main = "Number of insured patient by age")
+```
+
+```{r}
+#analysis of BMI
+x = seq(min(data$bmi), max(data$bmi), by = 0.1)
+y = dnorm(x, mean = mean(data$bmi), sd = sd(data$bmi)) * length(data$bmi) * 5
+hist(data$bmi, main = "BMI", xlab = 'BMI')
+lines(x,y, col = 'red')
+boxplot(data$bmi, main = "BMI")
+```
+
+```{r}
+
+```
+
+```{r}
+par(mfrow = c(1,2))
+qqnorm(sqrt(data$bmi))
+qqline(sqrt(data$bmi), col = 'red')
+
+qqnorm(log(data$bmi))
+qqline(log(data$bmi), col = 'red')
+
+shapiro.test((data$bmi))
+print(skewness(data$bmi))
+```
+```{r}
+#square root transformation of BMI
+par(mfrow = c(1,2))
+hist(sqrt(data$bmi), main = "sqrt(BMI)", xlab = "sqrt(BMI)")
+x = seq(min(sqrt(data$bmi)), max(sqrt(data$bmi)), by = 0.1)
+y = dnorm(x, mean = mean(sqrt(data$bmi)), sd = sd(sqrt(data$bmi))) * length(sqrt(data$bmi)) * 0.2
+lines(x,y, col = 'blue')
+boxplot(sqrt(data$bmi), main = "sqrt(BMI)")
+print(skewness(sqrt(data$bmi)))
+
+##savinig the bmi into data
+data$bmi <- sqrt(data$bmi)
+names(data)[names(data) == 'bmi'] <- 'sqrt(bmi)'
+```
+```{r}
+model = lm(data$`log(claim)`~ data$`sqrt(bmi)`)
+resd = residuals(model)
+qqnorm(resd)
+qqline(resd, col="red")
+```
+
+
+```{r}
+par(mfrow = c(1,1))
+x = seq(min(data$bloodpressure), max(data$bloodpressure), by = 0.1)
+y = dnorm(x, mean = mean(data$bloodpressure), sd = sd(data$bloodpressure)) * length(data$bloodpressure) * 5
+hist(data$bloodpressure, main = "bloodpressure", xlab = "bloodpressure")
+lines(x,y, col = 'red')
+boxplot(data$bloodpressure, main = "bloodpressure")
+outliers_before <- boxplot.stats(data$bloodpressure)$out
+length(outliers_before)  # Number of outliers before log transform
+print(skewness(data$bloodpressure))
+
+```
+
+
+```{r}
+par(mfrow=c(1,2))
+x2 <- seq(min(log(data$bloodpressure)), max(log(data$bloodpressure)), length = 100)
+y2 <- dnorm(x2, mean = mean(log(data$bloodpressure)), sd = sd(log(data$bloodpressure)))
+hist(log(data$bloodpressure), 
+     main = "Histogram of log(data$bloodpressure)", 
+     xlab = "log(data$bloodpressure)", 
+     col = "gray", 
+     freq = FALSE)
+lines(x2, y2, col = 'blue', lwd = 2)
+boxplot(log(data$bloodpressure))
+outliers_after <- boxplot.stats(log(data$bloodpressure))$out
+length(outliers_after)  # Number of outliers after log transform
+print(skewness(log(data$bloodpressure)))
+
+## saving transformed bp into data
+data$bloodpressure <- log(data$bloodpressure)
+names(data)[names(data) == 'bloodpressure'] <- 'log(bloodpressure)'
+```
+
+```{r}
+qqnorm(data$`log(bloodpressure)`)
+qqline(data$`log(bloodpressure)`, col = "red")
+```
+
+```{r}
+model = lm(data$`log(claim)`~data$`log(bloodpressure)`)
+resd = residuals(model)
+qqnorm(resd)
+qqline(resd, col="red")
+```
+
+## Statistical Analysis
+
+```{r}
+cont_data <- data[, c('log(claim)', 'age', 'sqrt(bmi)', 'log(bloodpressure)')]
+mat = cor(cont_data) 
+heatmap.2(mat, cellnote=round(mat, 2), trace = "none", notecol="black")
+
+
+pairs.panels(cont_data,
+             method = "pearson",       # Correlation method
+             hist.col = "gray",        # Histogram fill color
+             density = TRUE, col = 'red',           # Adds red density lines
+             ellipses = FALSE,         # Skip correlation ellipses
+             scale = FALSE,            # Keeps axis scales consistent
+             cex.cor = 1.2)            # Adjusts size of correlation text
+
+```
+
+
+```{r}
+pairs(data[,c(2, 4, 5, 10)])
+```
+
+#Relation between claims and gender
+
+```{r}
+boxplot(log(data$`log(claim)`)~data$gender, ylab = "log(claim)", xlab = "gender")
+```
+```{r}
+barplot(table(data$gender), main = "Number of insured patients by gender")
+
+```
+```{r}
+var.test(data$`log(claim)`~data$gender)
+```
+```{r}
+t.test(data$`log(claim)`[data$gender == "male"],data$`log(claim)`[data$gender == "female"], var.equal = FALSE)
+
+```
+#Relation between claim and smoker
+
+```{r}
+boxplot(data$`log(claim)`~data$smoker, xlab = "smoker", ylab = "log(claim)")
+```
+```{r}
+barplot(table(data$smoker), main = "Number of insured patients by their smoking status")
+```
+
+```{r}
+var.test(data$`log(claim)` ~ data$smoker)
+```
+
+```{r}
+t.test(data$`log(claim)`[data$smoker == "No"], data$`log(claim)`[data$smoker == "Yes"])
+```
+
+
+#Relation between claims and diabetic
+
+```{r}
+boxplot(log(data$`log(claim)`)~data$diabetic, xlab = "diabetic", ylab = "log(claim)")
+```
+```{r}
+barplot(table(data$diabetic), main="Number of insured patients by diabetic status")
+```
+
+```{r}
+var.test(data$`log(claim)` ~ data$diabetic)
+```
+
+```{r}
+t.test(data$`log(claim)`[data$diabetic == "No"], data$`log(claim)`[data$diabetic == "Yes"], var.equal = TRUE)
+```
+
+
+# Relation between claim and region
+
+```{r}
+boxplot(data$`log(claim)`~data$region, xlab = "region", ylab = "log(claim)")
+abline(h=mean(data$`log(claim)`), col='red')
+```
+```{r}
+barplot(table(data$region), main = "Number of insured patient in each region")
+```
+
+```{r}
+summary(aov(data$`log(claim)` ~ factor(data$region)))
+oneway.test(data$`log(claim)` ~ data$region, data = data, var.equal = FALSE)
+```
+```{r}
+pairwise.t.test(data$`log(claim)`, data$region, p.adjust.method="none")
+```
+
+
+# Relation between claim and children
+
+```{r}
+boxplot(data$`log(claim)`~data$children, xlab = "children", ylab = "log(claim)")
+abline(h = mean(data$`log(claim)`), col = 'blue')
+```
+```{r}
+barplot(table(data$children), main = "Number of insured patients by their number of children")
+oneway.test(data$`log(claim)` ~ data$children, data = data, var.equal = F)
+pairwise.t.test(data$`log(claim)`, data$children, p.adjust.method = 'none')
+sum(data$children == 5)
+```
+
+```{r}
+summary(aov(data$`log(claim)` ~ factor(data$children)))
+```
+```{r}
+pairwise.t.test(data$`log(claim)`, data$children, p.adjust.method = "none")
+```
+
+
+```{r}
+library(ggplot2)
+
+# Plot for sqrt(bmi) to identify threshold
+ggplot(data, aes(x = `sqrt(bmi)`, y = `log(claim)`)) +
+  geom_point(alpha = 0.3) +
+  geom_vline(xintercept = 5.45, linetype = "dashed", color = "blue") +
+  geom_hline(yintercept = 10.4, linetype = "dashed", color = "red") +
+  annotate("text", x = 5.45, y = max(data$`log(claim)`), 
+           label = "Threshold = 5.45", hjust = -0.1, color = "blue") +
+  annotate("text", x = min(data$`sqrt(bmi)`) + 0.2, y = 10.4, 
+           label = "log(claim) = 10.4", vjust = -1, color = "red") +
+  labs(title = "log(claim) vs sqrt(bmi)", 
+       x = "sqrt(bmi)", 
+       y = "log(claim)") +
+  theme_minimal()
+
+
+
+# Create group based on threshold
+data$bmi_group <- ifelse(data$`sqrt(bmi)` > 5.45, "More than 5.45", "Lower than 5.45")
+sum(data$bmi_group == "Lower than 5.45")
+
+
+# Boxplot
+boxplot(`log(claim)` ~ bmi_group, data = data,
+        main = "log(claim) by sqrt(bmi) group",
+        ylab = "log(claim)", xlab = "sqrt(bmi) threshold group")
+
+# t-test to compare means
+t.test(`log(claim)` ~ bmi_group, data = data)
+
+# plot for log(bloodpressure) for threshold
+ggplot(data, aes(x = `log(bloodpressure)`, y = `log(claim)`)) +
+  geom_point(alpha = 0.3) +
+  geom_vline(xintercept = 4.61, linetype = "dashed", color = "blue") +
+  geom_hline(yintercept = 9.13, linetype = "dashed", color = "red") +
+  annotate("text", x = 4.61, y = max(data$`log(claim)`), 
+           label = "Threshold = 4.61", hjust = -0.1, color = "blue") +
+  annotate("text", x = min(data$`log(bloodpressure)`) + 0.1, y = 10.4, 
+           label = "log(claim) = 9.13", vjust = -1, color = "red") +
+  labs(title = "log(claim) vs log(bloodpressure)", 
+       x = "log(bloodpressure)", 
+       y = "log(claim)") +
+  theme_minimal()
+
+# Create a new variable based on the 4.61 threshold
+data$bp_group <- ifelse(data$`log(bloodpressure)` > 4.61, "More than 4.61", "Less than 4.61")
+
+boxplot(`log(claim)` ~ bp_group, data = data,
+        main = "log(claim) by log(bloodpressure) group",
+        ylab = "log(claim)", xlab = "log(bloodpressure) threshold group")
+
+```
+
+```{r}
+# Create a list to store results
+results <- list()
+
+models <- list(
+  age        = lm(`log(claim)` ~ age, data = data),
+  bmi_group  = lm(`log(claim)` ~ bmi_group, data = data),
+  bp_group   = lm(`log(claim)` ~ bp_group, data = data),
+  gender     = lm(`log(claim)` ~ gender, data = data),
+  smoker     = lm(`log(claim)` ~ smoker, data = data),
+  diabetic   = lm(`log(claim)` ~ diabetic, data = data),
+  children   = lm(`log(claim)` ~ children, data = data),
+  region     = lm(`log(claim)` ~ region, data = data)
+)
+
+
+for (var in names(models)) {
+  model <- models[[var]]
+  s <- summary(model)
+  
+  intercept <- round(coef(model)[1], 4)
+  coef_var <- ifelse(length(coef(model)) > 1, round(coef(model)[2], 4), NA)
+  
+  p_val <- ifelse(length(s$coefficients[,4]) > 1, signif(s$coefficients[2,4], 4), signif(s$coefficients[1,4], 4))
+  r_sq <- round(s$r.squared, 4)
+  
+  
+  results[[var]] <- list(
+    Intercept = intercept,
+    Coef = coef_var,
+    p_value = p_val,
+    r_squared = r_sq
+  )
+  
+}
+
+
+for (var in names(results)) {
+  res <- results[[var]]
+  cat("Variable:", var, "\n")
+  if (!is.na(res$Coef)) {
+    cat("Fitted model: Y =", res$Intercept, "+", res$Coef, "* X\n")
+  } else {
+    cat("Fitted model: Y =", res$Intercept, "\n")
+  }
+  cat("P-value:", res$p_value, "\n")
+  cat("R-squared:", res$r_squared, "\n\n")
+}
+
+```
+
+
+```{r}
+
+for (var in names(models)) {
+  model <- models[[var]]
+  
+  
+  qqnorm(residuals(model), main = paste("Q-Q Plot of Residuals for", var))
+  qqline(residuals(model), col = "blue")
+}
+```
+
+
+```{r}
+# Fit the multiple regression model
+model_insuranceclaim <- lm(`log(claim)` ~ age + bmi_group + bp_group + gender + smoker + diabetic + children + region, data = data)
+
+# Display the summary of the model
+summary(model_insuranceclaim)
+
+```
+
