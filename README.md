@@ -26,7 +26,7 @@ We explored the following key questions:
 - Statistical techniques: correlation analysis, ANOVA, t-tests, linear regression
 
 ## Dataset Source
-[Insurance Dataset on Kaggle] https://www.kaggle.com/datasets/thedevastator/insurance-claim-analysis-demographic-and-health/data4
+[Insurance Dataset on Kaggle](https://www.kaggle.com/datasets/thedevastator/insurance-claim-analysis-demographic-and-health/data4)
 
 ## Contributors
 - Victor [@VictorrFong](https://github.com/VictorrFong)
