@@ -1,1 +1,4 @@
 # MH3511-Data Analysis Group Project 
+
+Abstract:
+With healthcare costs continuing to rise globally, understanding the factors that influence insurance claims is crucial for both insurers and policyholders. Insurance companies rely on accurate risk assessment to set premiums that reflect an individual’s likelihood of making a claim. It is known that certain factors like age, weight, smoking status and other pre-existing conditions reflect the risk of the policyholder which in turn affects the cost of their premiums. Thorough understanding of the relationship between the amount of claims and the various factors can provide valuable insights for risk assessment and policy pricing, ensuring appropriate premium pricing and maintaining its price competitiveness. Hence we aim to examine the relationship between insurance claims and the various demographic and health indicators through fundamental statistical analysis.
