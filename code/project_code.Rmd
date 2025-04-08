@@ -274,4 +274,15 @@ library(PerformanceAnalytics)
 
 chart.Correlation(continuous, histogram = TRUE, method = "pearson")
 ```
+```{r}
+model = lm(data$logclaim~data$sqrtbmi + log(data$bloodpressure) + data$age + factor(data$smoker) + factor(data$diabetic) + factor(data$region) + factor(data$gender))
+step(model, direction = 'backward')
+```
+```{r}
+library(ggplot2)
+```
+
+```{r}
+
+```
 
